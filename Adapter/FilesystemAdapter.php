@@ -26,4 +26,17 @@ class FilesystemAdapter extends AbstractAdapter implements PruneableInterface
         parent::__construct('', $defaultLifetime);
         $this->init($namespace, $directory);
     }
+
+    /**
+     * {@inheritdoc}
+     * 
+     * @author Anton Tivonenko <anton.tivonenko@gmail.com>
+     */
+    public static function factory($params)
+    {
+        return new self(
+            $params['namespace'] ?? '',
+            $params['defaultLifetime'] ?? 0
+        );
+    }
 }
