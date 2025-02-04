@@ -188,4 +188,235 @@ abstract class AbstractAdapter implements AdapterInterface, CacheInterface, Logg
 
         return $ok;
     }
+
+    /**
+     * Factory.
+     * 
+     * @author Anton Tivonenko <anton.tivonenko@gmail.com>
+     * 
+     * @param string[] $params Adapter configuration options.
+     * 
+     * @return AbstractAdapter
+     */
+    public static function factory($params)
+    {
+        return new self(
+            $params['namespace'] ?? '',
+            $params['defaultLifetime'] ?? 0
+        );
+    }
+
+    /**
+     * Возврашает или устанавливает значение.
+     * 
+     * @author Anton Tivonenko <anton.tivonenko@gmail.com>
+     * 
+     * @param string $кey Ключ.
+     * @param callable $callback
+     * @param int $expiry
+     * 
+     * @return array
+     */
+    public function getOrSet(string $key, callable $callback, int $expiry = null)
+    {
+        if ($this->hasItem($key)) {
+            return $this->getItem($key)->get();
+        } else {
+            $item = $this->getItem($key);
+            $value = $callback();
+            $item->set($value);
+            if ($expiry) {
+                $item->expiresAfter($expiry);
+            }
+            $this->save($item);
+            return $value;
+        }
+    }
+
+    /**
+     * Возвращает массив ключей найденных по указанному шаблону.
+     * 
+     * @author Anton Tivonenko <anton.tivonenko@gmail.com>
+     * 
+     * @param string $pattern Шаблон поиска ключей (по умолчанию '*').
+     * @param int $limit Допустимое количество возвращаемых ключей.
+     * 
+     * @return array
+     */
+    public function keys(string $pattern = '*', int $limit = 0): array
+    {
+        return [];
+    }
+
+    /**
+     * Заполняет весь хеш по указанному ключу. 
+     * 
+     * Нестроковые значения преобразуются в строку с использованием стандартного 
+     * (строкового) приведения. Значения `null` сохраняются как пустые строки.
+     * 
+     * @author Anton Tivonenko <anton.tivonenko@gmail.com>
+     * 
+     * @param string $key Ключ хэша.
+     * @param array $values Массив в виде пар 'ключ - значение'.
+     * 
+     * @return bool Если `true`, удалось успешно заполнить хэш.
+     */
+    public function hashMultiSet(string $hashKey, array $values): bool
+    {
+        return false;
+    }
+
+    /**
+     * Возвращает значения, связанные с указанными полями (ключами) в хеше.
+     * 
+     * @author Anton Tivonenko <anton.tivonenko@gmail.com>
+     * 
+     * @param string $hashKey Ключ хэша.
+     * @param array $keys Поля (ключи) с которыми связаны элементы масссива.
+     * 
+     * @return array Массив элементов, значений указанных полей (ключей) в хеше с 
+     *     ключами хеша в качестве ключей массива. Если не существуют ключи связанные с 
+     *     элементы массива, то вернёт массив вида: `['key1' => false, 'key2' => false...]`.
+     * 
+     */
+    public function hashMultiGet(string $hashKey, array $keys): array
+    {
+        return [];
+    }
+
+    /**
+     * Возвращает массив всех элементов хэша.
+     * 
+     * @author Anton Tivonenko <anton.tivonenko@gmail.com>
+     * 
+     * @param string $hashKey Ключ хэша.
+     * 
+     * @return null|array Если `null`, содержимое хеша по указанному ключу не существует.
+     */
+    public function hashGetAll(string $hashKey): ?array
+    {
+        return null;
+    }
+
+    /**
+     * Возвращает значение из хэша, хранящегося в ключе. 
+     * 
+     * Если хэш-таблица не существует или ключ не существует, возвращает null.
+     * 
+     * @author Anton Tivonenko <anton.tivonenko@gmail.com>
+     * 
+     * @param string $hashKey Ключ хэша.
+     * @param string|int $hashKey Поле (ключ) хэш-таблицы.
+     * 
+     * @return null|mixed
+     */
+    public function hashGet(string $hashKey, $key)
+    {
+        return null;
+    }
+
+    /**
+     * Возврашает или заполняет хэш-таблицу значениями.
+     * 
+     * @author Anton Tivonenko <anton.tivonenko@gmail.com>
+     * 
+     * @param string $hashKey Ключ хэша.
+     * @param callable $callback
+     * 
+     * @return array
+     */
+    public function hashSetOrGetAll(string $hashKey, callable $callback = null): array
+    {
+        return [];
+    }
+
+    /**
+     * Удаляет значение из хэша, хранящегося по указанному ключу. 
+     * 
+     * Если хэш-таблица не существует или ключ не существует, возвращается `false`.
+     * 
+     * @author Anton Tivonenko <anton.tivonenko@gmail.com>
+     * 
+     * @param string $hashKey Ключ хэша.
+     * @param array $keys Поля (ключи) хэш-таблицы.
+     * 
+     * @return int Количество удалённых полей (ключей)  хэш-таблицы. Если хэш-таблица 
+     *    не существует '0'.
+     */
+    public function hashDelete(string $hashKey, array $keys): int
+    {
+        return 0;
+    }
+
+    /**
+     * Добавляет значение c полем (ключем) в хэш-таблицу.
+     * 
+     * @author Anton Tivonenko <anton.tivonenko@gmail.com>
+     * 
+     * @param string $hashKey Ключ хэша.
+     * @param array $key Поле (ключ) хэш-таблицы.
+     * @param mixed $value Значение поля (ключа) хэш-таблицы.
+     * 
+     * @return bool|int Если '1',значение не существовало и было успешно добавлено. 
+     *     Если '0', значение уже существовало и было заменено. `false`, если произошла ошибка.
+     */
+    public function hashSet(string $hashKey, string $key, $value)
+    {
+        return [];
+    }
+
+    /**
+     * Возвращает длину хэша в количестве элементов.
+     * 
+     * @author Anton Tivonenko <anton.tivonenko@gmail.com>
+     * 
+     * @param string $hashKey Ключ хэша.
+     * 
+     * @return mixed Длину хэша в количестве элементов. Есди хэш не существует, возвратит '0'.
+     */
+    public function hashLength(string $hashKey): int
+    {
+        return 0;
+    }
+
+    /**
+     * Возвращает ключи в виде хэша в виде массива строк.
+     * 
+     * @author Anton Tivonenko <anton.tivonenko@gmail.com>
+     * 
+     * @param string $hashKey Ключ хэша.
+     * 
+     * @return array Массив элементов, ключи хеша. Это работает как `array_keys()` в PHP.
+     */
+    public function hashKeys(string $hashKey): array
+    {
+        return [];
+    }
+
+    /**
+     * Возвращает значения  полей (ключей) хэш-таблицы в виде массива строк.
+     * 
+     * @author Anton Tivonenko <anton.tivonenko@gmail.com>
+     * 
+     * @param string $hashKey Ключ хэша.
+     * 
+     * @return array Массив элементов, значения хеша. Работает как `array_values()` в PHP.
+     */
+    public function hashValues(string $hashKey): array
+    {
+        return [];
+    }
+
+    /**
+     * Проверяет, существует ли указанный элемент (поле) по указанному ключу хэша.
+     * 
+     * @param string $hashKey Ключ хэша.
+     * @param array $key Поле (ключ) хэш-таблицы.
+     * 
+     * @return bool
+     */
+    public function hashExists(string $hashKey, $key): bool
+    {
+        return false;
+    }
 }
