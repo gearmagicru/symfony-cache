@@ -326,4 +326,76 @@ class MemcachedAdapter extends AbstractAdapter
     {
         return strtr($key, self::RESERVED_PSR6, self::RESERVED_MEMCACHED);
     }
+
+    /**
+     * Для Memcached формирует лишнии префиксы для ключа в отличии от Redis.
+     * 
+     * Т.к. в {@see AbstractAdapterTrait} генерируется namespace для каждого пула, 
+     * который подставляется в каждый ключ. И при каждом обращении namespace может 
+     * отличаться.
+     * 
+     * Перегрузил метод {@see AbstractAdapterTrait::getId()}.
+     * 
+     * @author Anton Tivonenko <anton.tivonenko@gmail.com>
+     * 
+     * @return string
+     */
+    protected function getId($key)
+    {
+        return $key;
+    }
+
+    /**
+     * Factory.
+     * 
+     * @author Anton Tivonenko <anton.tivonenko@gmail.com>
+     * 
+     * @param string[] $params Adapter configuration options.
+     * 
+     * @return MemcachedAdapter
+     */
+    public static function factory($params)
+    {
+        $client = self::createConnection($params['dsn'], $params['options'] ?? []);
+        return new self(
+            $client,
+            $params['namespace'] ?? '',
+            $params['defaultLifetime'] ?? 0,
+            $params['marshaller'] ?? null
+        );
+    }
+
+    /**
+     * {@inheritdoc}
+     * 
+     * @author Anton Tivonenko <anton.tivonenko@gmail.com>
+     */
+    public function keys(string $pattern = '*', int $limit = 0): array
+    {
+        $client = $this->getClient();
+        $client->setOption(\Memcached::OPT_BINARY_PROTOCOL, false);
+        $keys = $this->getClient()->getAllKeys();
+        $keys = $keys ?: [];
+        if ($keys && $limit > 0) {
+            $keys = array_slice($keys, 0, $limit);
+        }
+        $search = [];
+        if ($pattern === '*') {
+            foreach ($keys as $index => $key) {
+                $keys[$index] = self::decodeKey($key);
+            }
+            $search = $keys;
+        } else {
+            $pattern = trim($pattern, '*');
+            foreach ($keys as $index => $key) {
+                $key = self::decodeKey($key);
+                if (strpos($key, $pattern) !== false) {
+                    $search[] = $key;
+                }
+            }
+        }
+        return $search;
+    }
+}
+
 }
