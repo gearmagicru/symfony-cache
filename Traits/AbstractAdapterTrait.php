@@ -374,4 +374,40 @@ trait AbstractAdapterTrait
     {
         return strtr(substr_replace(base64_encode(pack('V', $value)), static::NS_SEPARATOR, 5), '/', '_');
     }
+
+    /**
+     * getAdditionItems.
+     * 
+     * @author Anton Tivonenko <anton.tivonenko@gmail.com>
+     * 
+     * @param string[string] $buildKeys keys.
+     * 
+     * @return AbstractAdapterTrait
+     */
+    public function getAdditionItems(array $buildKeys = [])
+    {
+        if ($this->deferred) {
+            $this->commit();
+        }
+        $ids = [];
+
+        $keys = array_values($buildKeys);
+        foreach ($keys as $key) {
+            $ids[] = $this->getId($key);
+        }
+        try {
+            $items = $this->doFetch($ids);
+        } catch (\Exception $e) {
+            CacheItem::log($this->logger, 'Failed to fetch items: '.$e->getMessage(), ['keys' => $keys, 'exception' => $e, 'cache-adapter' => get_debug_type($this)]);
+            $items = [];
+        }
+        $result = [];
+        foreach ($buildKeys as $key => $buildKey) {
+            if (isset($items[$buildKey]))
+                $result[$key] = $items[$buildKey];
+            else 
+                $result[$key] = null;
+        }
+        return $result;
+    }
 }
