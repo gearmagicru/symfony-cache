@@ -57,5 +57,8 @@
             "/Tests/"
         ]
     },
+    "extra": {
+        "gm": {"name": "symfony/cache"}
+    },
     "minimum-stability": "dev"
 }
