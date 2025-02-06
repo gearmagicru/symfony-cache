@@ -1,5 +1,5 @@
 {
-    "name": "symfony/cache",
+    "name": "gearmagicru/symfony-cache",
     "type": "library",
     "description": "Provides extended PSR-6, PSR-16 (and tags) implementations",
     "keywords": ["caching", "psr6"],
