@@ -397,5 +397,3 @@ class MemcachedAdapter extends AbstractAdapter
         return $search;
     }
 }
-
-//}
