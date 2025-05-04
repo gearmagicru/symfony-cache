@@ -340,7 +340,7 @@ class MemcachedAdapter extends AbstractAdapter
      * 
      * @return string
      */
-    protected function getId($key)
+    protected function getId(mixed $key): string
     {
         return $key;
     }
@@ -398,4 +398,4 @@ class MemcachedAdapter extends AbstractAdapter
     }
 }
 
-}
+//}
